@@ -1,0 +1,95 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:punto_venta_dolores/datos/base_datos.dart';
+import 'package:punto_venta_dolores/datos/repositorio_productos.dart';
+import 'package:punto_venta_dolores/datos/repositorio_ventas.dart';
+import 'package:punto_venta_dolores/dominio/carrito.dart';
+import 'package:punto_venta_dolores/dominio/excepciones.dart';
+import 'package:punto_venta_dolores/dominio/producto.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+
+void main() {
+  sqfliteFfiInit();
+  databaseFactory = databaseFactoryFfi;
+
+  late Database db;
+  late RepositorioProductos productos;
+  late RepositorioVentas ventas;
+
+  setUp(() async {
+    db = await openDatabase(
+      inMemoryDatabasePath,
+      version: 1,
+      onCreate: BaseDatos.crearTablas,
+    );
+    productos = RepositorioProductos(db);
+    ventas = RepositorioVentas(db);
+
+    await productos.agregar(const Producto(
+      codigo: 'NV-001',
+      nombre: 'Nieve de limón',
+      precioCentavos: 2500,
+      existencias: 5,
+    ));
+  });
+
+  tearDown(() async {
+    await db.close();
+  });
+
+  group('RepositorioProductos', () {
+    test('guarda y busca producto', () async {
+      final p = await productos.buscarPorCodigo('NV-001');
+      expect(p!.nombre, 'Nieve de limón');
+      expect(p.id, isNotNull);
+    });
+
+    test('código duplicado lanza excepción de dominio', () async {
+      expect(
+        () => productos.agregar(const Producto(
+          codigo: 'NV-001',
+          nombre: 'Otra',
+          precioCentavos: 100,
+          existencias: 1,
+        )),
+        throwsA(isA<CodigoDuplicadoException>()),
+      );
+    });
+
+    test('bajo inventario alerta', () async {
+      await productos.agregar(const Producto(
+        codigo: 'NV-002',
+        nombre: 'Nieve de tequila',
+        precioCentavos: 3500,
+        existencias: 20,
+      ));
+
+      final alertas = await productos.bajoInventario(limite: 5);
+      expect(alertas.length, 1);
+      expect(alertas.first.codigo, 'NV-001');
+    });
+  });
+
+  group('RepositorioVentas y Transacciones', () {
+    test('cobrar descuenta inventario y registra venta', () async {
+      final p = (await productos.buscarPorCodigo('NV-001'))!;
+      final carrito = Carrito()..agregar(p, cantidad: 2);
+      final venta = await ventas.cobrar(carrito, 10000);
+
+      expect(venta.cambioCentavos, 5000);
+      expect((await productos.buscarPorCodigo('NV-001'))!.existencias, 3);
+    });
+
+    test('si falla el cobro NO se descuenta inventario', () async {
+      final p = (await productos.buscarPorCodigo('NV-001'))!;
+      final carrito = Carrito()..agregar(p, cantidad: 2);
+
+      await expectLater(
+        () async => ventas.cobrar(carrito, 100),
+        throwsA(isA<PagoInsuficienteException>()),
+      );
+
+      expect((await productos.buscarPorCodigo('NV-001'))!.existencias, 5);
+    });
+  });
+}
