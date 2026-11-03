@@ -1,27 +1,26 @@
-/// Errores de negocio. Dart puro: se prueban sin Flutter ni base de datos.
 class CodigoDuplicadoException implements Exception {
   final String codigo;
   CodigoDuplicadoException(this.codigo);
+
   @override
-  String toString() => 'Ya existe un producto con el código $codigo';
+  String toString() => 'El producto con código $codigo ya existe.';
 }
 
 class ExistenciasInsuficientesException implements Exception {
   final String producto;
   final int disponibles;
   ExistenciasInsuficientesException(this.producto, this.disponibles);
+
   @override
-  String toString() => 'Solo quedan $disponibles de $producto';
+  String toString() =>
+      'Existencias insuficientes para $producto (disponibles: $disponibles).';
 }
 
 class PagoInsuficienteException implements Exception {
-  final int faltanCentavos;
-  PagoInsuficienteException(this.faltanCentavos);
-  @override
-  String toString() => 'Faltan $faltanCentavos centavos para cubrir la cuenta';
-}
+  final int total;
+  final int pago;
+  PagoInsuficienteException(this.total, this.pago);
 
-class CarritoVacioException implements Exception {
   @override
-  String toString() => 'No hay productos en el carrito';
+  String toString() => 'Pago insuficiente: total $total, entregado $pago.';
 }

@@ -3,12 +3,14 @@ class LineaVenta {
   final String nombre;
   final int cantidad;
   final int precioCentavos;
+
   const LineaVenta(this.codigo, this.nombre, this.cantidad, this.precioCentavos);
-  int get importeCentavos => cantidad * precioCentavos;
+
+  int get subtotalCentavos => precioCentavos * cantidad;
 }
 
 class Venta {
-  final int? id;
+  final int id;
   final DateTime fecha;
   final int totalCentavos;
   final int ivaCentavos;
@@ -16,7 +18,7 @@ class Venta {
   final List<LineaVenta> lineas;
 
   const Venta({
-    this.id,
+    required this.id,
     required this.fecha,
     required this.totalCentavos,
     required this.ivaCentavos,
@@ -31,5 +33,6 @@ class ResumenDia {
   final int numeroVentas;
   final int totalCentavos;
   final int ivaCentavos;
+
   const ResumenDia(this.numeroVentas, this.totalCentavos, this.ivaCentavos);
 }

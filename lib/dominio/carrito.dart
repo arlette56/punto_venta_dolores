@@ -4,50 +4,35 @@ import 'producto.dart';
 class LineaCarrito {
   final Producto producto;
   int cantidad;
-  LineaCarrito(this.producto, this.cantidad);
-  int get importeCentavos => producto.precioCentavos * cantidad;
+
+  LineaCarrito(this.producto, {this.cantidad = 1});
+
+  int get subtotalCentavos => producto.precioCentavos * cantidad;
 }
 
 class Carrito {
-  /// IVA en porcentaje entero (16 = 16%).
-  final int tasaIva;
-  final Map<String, LineaCarrito> _lineas = {};
-
-  Carrito({this.tasaIva = 16});
-
-  List<LineaCarrito> get lineas => _lineas.values.toList();
-  bool get estaVacio => _lineas.isEmpty;
+  final List<LineaCarrito> lineas = [];
 
   void agregar(Producto p, {int cantidad = 1}) {
-    final actual = _lineas[p.codigo]?.cantidad ?? 0;
-    if (actual + cantidad > p.existencias) {
-      throw ExistenciasInsuficientesException(p.nombre, p.existencias);
-    }
-    if (_lineas.containsKey(p.codigo)) {
-      _lineas[p.codigo]!.cantidad += cantidad;
+    final index = lineas.indexWhere((l) => l.producto.codigo == p.codigo);
+    if (index >= 0) {
+      lineas[index].cantidad += cantidad;
     } else {
-      _lineas[p.codigo] = LineaCarrito(p, cantidad);
+      lineas.add(LineaCarrito(p, cantidad: cantidad));
     }
   }
 
-  void quitar(String codigo) => _lineas.remove(codigo);
-
-  void vaciar() => _lineas.clear();
-
-  /// Los precios YA incluyen IVA: se desglosa el impuesto del total.
   int get totalCentavos =>
-      _lineas.values.fold(0, (s, l) => s + l.importeCentavos);
+      lineas.fold(0, (sum, l) => sum + l.subtotalCentavos);
 
-  int get subtotalCentavos => totalCentavos - ivaCentavos;
-
-  /// iva = total * tasa / (100 + tasa), redondeado con enteros.
-  int get ivaCentavos =>
-      (totalCentavos * tasaIva + (100 + tasaIva) ~/ 2) ~/ (100 + tasaIva);
+  int get ivaCentavos => (totalCentavos * 0.16 / 1.16).round();
 
   int cambio(int pagoCentavos) {
-    if (estaVacio) throw CarritoVacioException();
+    if (lineas.isEmpty) {
+      throw Exception('El carrito está vacío.');
+    }
     if (pagoCentavos < totalCentavos) {
-      throw PagoInsuficienteException(totalCentavos - pagoCentavos);
+      throw PagoInsuficienteException(totalCentavos, pagoCentavos);
     }
     return pagoCentavos - totalCentavos;
   }

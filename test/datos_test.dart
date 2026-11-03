@@ -91,5 +91,15 @@ void main() {
 
       expect((await productos.buscarPorCodigo('NV-001'))!.existencias, 5);
     });
+
+    test('corte del día suma ventas de hoy', () async {
+      final p = (await productos.buscarPorCodigo('NV-001'))!;
+      await ventas.cobrar(Carrito()..agregar(p), 2500);
+      await ventas.cobrar(Carrito()..agregar(p, cantidad: 2), 5000);
+
+      final r = await ventas.corteDelDia(DateTime.now());
+      expect(r.numeroVentas, 2);
+      expect(r.totalCentavos, 7500);
+    });
   });
 }

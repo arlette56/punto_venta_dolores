@@ -13,20 +13,6 @@ class Producto {
     required this.existencias,
   });
 
-  Producto copiarCon({
-    int? id,
-    int? existencias,
-    int? precioCentavos,
-    String? nombre,
-  }) =>
-      Producto(
-        id: id ?? this.id,
-        codigo: codigo,
-        nombre: nombre ?? this.nombre,
-        precioCentavos: precioCentavos ?? this.precioCentavos,
-        existencias: existencias ?? this.existencias,
-      );
-
   Map<String, Object?> aMapa() => {
         if (id != null) 'id': id,
         'codigo': codigo,
@@ -35,11 +21,11 @@ class Producto {
         'existencias': existencias,
       };
 
-  factory Producto.desdeMapa(Map<String, Object?> m) => Producto(
-        id: m['id'] as int?,
-        codigo: m['codigo'] as String,
-        nombre: m['nombre'] as String,
-        precioCentavos: m['precio_centavos'] as int,
-        existencias: m['existencias'] as int,
+  factory Producto.desdeMapa(Map<String, Object?> map) => Producto(
+        id: map['id'] as int?,
+        codigo: map['codigo'] as String,
+        nombre: map['nombre'] as String,
+        precioCentavos: map['precio_centavos'] as int,
+        existencias: map['existencias'] as int,
       );
 }
