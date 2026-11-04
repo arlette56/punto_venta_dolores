@@ -1,3 +1,5 @@
-# punto_venta_dolores
+## 📄 Documentación y Manual
 
-A new Flutter project.
+Puedes consultar el manual de práctica paso a paso del proyecto en el siguiente enlace:
+
+* [📄 Ver Manual de TDD - Punto de Venta (PDF)](./docs/Manual_TDD_PuntoDeVenta.pdf)
